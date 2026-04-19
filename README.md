@@ -4,6 +4,8 @@ Welcome! This repository is a beginner-friendly Java socket project.
 
 You will learn how a server accepts clients, how sockets exchange data, and how a server-authoritative game stays synchronized between players.
 
+I hope this repo helps you learn how servers work in Java. I created this project during my Computer Science course while learning Java, sockets, and object-oriented programming, and later refactored it with Codex. ;]
+
 ## What you will learn 🎯
 
 - How to create a TCP server in Java with `ServerSocket`.
