@@ -2,72 +2,81 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
-public class Cliente extends Thread{
+public class Cliente extends Thread {
+  private static final String HOST = "localhost";
   private static final int DEFAULT_PORT = 5050;
   private static final String PORT_ENV = "PONG_PORT";
+  private static final int NETWORK_TICK_RATE = 60;
+  private static final long NETWORK_TICK_SLEEP_MILLIS = 1000L / NETWORK_TICK_RATE;
+  private static final char PLAYER_ONE_MARKER = '1';
+  private static final char PLAYER_TWO_MARKER = '2';
 
-  static DataOutputStream os = null;
-  static DataInputStream is = null;
-  static boolean paraThread = false;
-  
-  int player1=0 , player2=0 , BallX=0 , BallY=0;
+  static DataOutputStream outputStream = null;
+  static DataInputStream inputStream = null;
+  static boolean stopReaderThread = false;
+
+  int playerOneY = 0;
+  int playerTwoY = 0;
+  int ballX = 0;
+  int ballY = 0;
   int playerOneScore = 0;
   int playerTwoScore = 0;
-  
-  int num_cliente;
-  boolean up=false ,down=false, showTitleScreen=true;
-  
-  Socket socket=null;
-  PongPanel pongPanel=null;
-  
-  Cliente(PongPanel pongPanel){
-	this.pongPanel=pongPanel;
-	}
-	
-public void run(){
-     try {
+
+  int clientNumber;
+  boolean moveUp = false;
+  boolean moveDown = false;
+  boolean showTitleScreen = true;
+
+  Socket clientSocket = null;
+  PongPanel gamePanel = null;
+
+  Cliente(PongPanel gamePanel) {
+    this.gamePanel = gamePanel;
+  }
+
+  public void run() {
+    try {
       int port = resolvePort();
-      socket = new Socket("localhost", port);
-      os = new DataOutputStream(socket.getOutputStream());
-      is = new DataInputStream(socket.getInputStream());	
-      
-      num_cliente=is.readInt();//iniciar
-     
-      new Leitura_servidor().start();
-      
+      clientSocket = new Socket(HOST, port);
+      outputStream = new DataOutputStream(clientSocket.getOutputStream());
+      inputStream = new DataInputStream(clientSocket.getInputStream());
+
+      clientNumber = inputStream.readInt();
+      new ServerReader().start();
+
     } catch (UnknownHostException e) {
       System.err.println("Don't know about host.");
+      return;
     } catch (IOException e) {
       System.err.println("Couldn't get I/O for the connection to host");
+      return;
     }
-   
+
     try {
-		
-		switch (num_cliente){
-		case 0:
-			os.writeChar('1');
-			break;
-		case 1:
-			os.writeChar('2');
-			break;
-		}
-	
-	
-		do{
-	
-		this.up= pongPanel.up;
-		this.down= pongPanel.down;	
-        
-        os.writeBoolean(up);
-        os.writeBoolean(down);
-		os.flush();
-		
-		try{
-		sleep(1000/60);
-		}catch(InterruptedException e){};
-		
-		}while(true);
-     
+      switch (clientNumber) {
+      case 0:
+        outputStream.writeChar(PLAYER_ONE_MARKER);
+        break;
+      case 1:
+        outputStream.writeChar(PLAYER_TWO_MARKER);
+        break;
+      }
+
+      do {
+        moveUp = gamePanel.moveUp;
+        moveDown = gamePanel.moveDown;
+
+        outputStream.writeBoolean(moveUp);
+        outputStream.writeBoolean(moveDown);
+        outputStream.flush();
+
+        try {
+          sleep(NETWORK_TICK_SLEEP_MILLIS);
+        } catch (InterruptedException e) {
+        }
+
+      } while (true);
+
     } catch (UnknownHostException e) {
       System.err.println("Trying to connect to unknown host: " + e);
     } catch (IOException e) {
@@ -88,53 +97,54 @@ public void run(){
       return DEFAULT_PORT;
     }
   }
-	
 
- class Leitura_servidor extends Thread{//clase interna leitura nao preciso de sleep mas na hora de enviar precisa de sleep porque ira ocorrer um atraso
+  class ServerReader extends Thread {
 
-	public void run(){		
-	
-	try{
-			
-		do{ 	showTitleScreen=is.readBoolean();
-        
-                playerOneScore= is.readInt();
-				playerTwoScore= is.readInt();
-				
-				player1=is.readInt();
-				player2=is.readInt();
-				
-				BallX=is.readInt();
-				BallY=is.readInt();
-			
-			if(num_cliente==0){
-				pongPanel.showTitleScreen=showTitleScreen;
-				pongPanel.player1y= player1;
-				pongPanel.player2y= player2;
-				pongPanel.BallX=BallX;
-				pongPanel.BallY=BallY;
-				
-				pongPanel.playerOneScore= playerOneScore;
-				pongPanel.playerTwoScore= playerTwoScore;
-			}
-			
-			if(num_cliente==1){
-				pongPanel.showTitleScreen=showTitleScreen;
-				pongPanel.player1y= player2;
-				pongPanel.player2y= player1;
-				pongPanel.BallX=BallX;
-				pongPanel.BallY=BallY;
-				
-				pongPanel.playerOneScore= playerTwoScore;
-				pongPanel.playerTwoScore= playerOneScore;
-			}
-				
-		}while(!paraThread);
-	
-	} catch (IOException e) {
-      System.err.println("IOException:  " + e);}
+    public void run() {
 
-	}
+      try {
+
+        do {
+          showTitleScreen = inputStream.readBoolean();
+
+          playerOneScore = inputStream.readInt();
+          playerTwoScore = inputStream.readInt();
+
+          playerOneY = inputStream.readInt();
+          playerTwoY = inputStream.readInt();
+
+          ballX = inputStream.readInt();
+          ballY = inputStream.readInt();
+
+          if (clientNumber == 0) {
+            gamePanel.showTitleScreen = showTitleScreen;
+            gamePanel.playerOneY = playerOneY;
+            gamePanel.playerTwoY = playerTwoY;
+            gamePanel.ballX = ballX;
+            gamePanel.ballY = ballY;
+
+            gamePanel.playerOneScore = playerOneScore;
+            gamePanel.playerTwoScore = playerTwoScore;
+          }
+
+          if (clientNumber == 1) {
+            gamePanel.showTitleScreen = showTitleScreen;
+            gamePanel.playerOneY = playerTwoY;
+            gamePanel.playerTwoY = playerOneY;
+            gamePanel.ballX = ballX;
+            gamePanel.ballY = ballY;
+
+            gamePanel.playerOneScore = playerTwoScore;
+            gamePanel.playerTwoScore = playerOneScore;
+          }
+
+        } while (!stopReaderThread);
+
+      } catch (IOException e) {
+        System.err.println("IOException:  " + e);
+      }
+
+    }
   }
-  
+
 }

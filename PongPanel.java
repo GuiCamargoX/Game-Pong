@@ -1,111 +1,135 @@
 import java.awt.Color;
-import java.awt.Graphics;
-import javax.swing.JPanel;
-import java.awt.BorderLayout;
-import javax.swing.JFrame;
-import java.awt.event.*;
-import java.awt.Rectangle;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import javax.swing.JPanel;
 
-public class PongPanel extends JPanel implements KeyListener{
-boolean showTitleScreen = true;
-int BallX=650/2 ,BallY=480/2 ,diameter;
-int player1y=250 , player2y=250;
-int playerOneScore = 0;
-int playerTwoScore = 0;
+public class PongPanel extends JPanel implements KeyListener {
+    static final int BOARD_WIDTH = 650;
+    static final int BOARD_HEIGHT = 480;
 
-public boolean up=false, down=false;
-	
-	//dimensao
-	@Override
-	public Dimension getPreferredSize() {
-      return new Dimension(650,480);
+    private static final int FRAME_RATE = 60;
+    private static final long FRAME_SLEEP_MILLIS = 1000L / FRAME_RATE;
+    private static final int CENTER_LINE_X = BOARD_WIDTH / 2;
+    private static final int CENTER_LINE_STEP = 50;
+    private static final int CENTER_LINE_LENGTH = 25;
+    private static final int SCORE_FONT_SIZE = 36;
+    private static final int TITLE_FONT_SIZE = 70;
+    private static final int WAITING_FONT_SIZE = 28;
+    private static final int TITLE_X = 225;
+    private static final int TITLE_Y = 100;
+    private static final int WAITING_X = 145;
+    private static final int WAITING_Y = 400;
+    private static final int LEFT_SCORE_X = 150;
+    private static final int RIGHT_SCORE_X = 450;
+    private static final int SCORE_Y = 100;
+    private static final int BALL_SIZE = 15;
+    private static final int WALL_X = 10;
+    private static final int WALL_THICKNESS = 6;
+    private static final int WALL_WIDTH = BOARD_WIDTH - 20;
+    private static final int LEFT_PADDLE_X = 30;
+    private static final int RIGHT_PADDLE_X = 590;
+    private static final int PADDLE_WIDTH = 16;
+    private static final int PADDLE_HEIGHT = 77;
+
+    boolean showTitleScreen = true;
+    int ballX = BOARD_WIDTH / 2;
+    int ballY = BOARD_HEIGHT / 2;
+    int playerOneY = 250;
+    int playerTwoY = 250;
+    int playerOneScore = 0;
+    int playerTwoScore = 0;
+
+    public boolean moveUp = false;
+    public boolean moveDown = false;
+
+    @Override
+    public Dimension getPreferredSize() {
+        return new Dimension(BOARD_WIDTH, BOARD_HEIGHT);
     }
-    
-    //construct a PongPanel
-    public PongPanel(){
+
+    public PongPanel() {
         setBackground(Color.BLACK);
-        new FPS().start();
+        new RepaintLoop().start();
     }
 
-    //paint a ball
-    public void paintComponent(Graphics g){
+    @Override
+    public void paintComponent(Graphics graphics) {
+        super.paintComponent(graphics);
+        graphics.setColor(Color.WHITE);
 
-        super.paintComponent(g);
-        g.setColor(Color.WHITE);
-        
-        if (showTitleScreen) {//fazer isso enquanto showTitleSceen é verdade
+        if (showTitleScreen) {
+            graphics.setFont(new Font(Font.DIALOG, Font.BOLD, TITLE_FONT_SIZE));
+            graphics.drawString("Pong", TITLE_X, TITLE_Y);
 
-            g.setFont(new Font(Font.DIALOG, Font.BOLD, 70));
-            g.drawString("Pong", 225, 100);
-
-            g.setFont(new Font(Font.DIALOG, Font.BOLD, 28));
-            g.drawString("Esperando outro jogador", 145, 400);
-
-        }else {
-
-        //desenhar o tracejado
-        for (int lineY = 0; lineY < getHeight(); lineY += 50) {
-                g.drawLine(650/2, lineY, 650/2, lineY+25);
+            graphics.setFont(new Font(Font.DIALOG, Font.BOLD, WAITING_FONT_SIZE));
+            graphics.drawString("Esperando outro jogador", WAITING_X, WAITING_Y);
+            return;
         }
-        
-        //desenha os placares
-        g.setFont(new Font(Font.DIALOG, Font.BOLD, 36));
-        g.drawString(String.valueOf(playerOneScore), 150, 100);
-        g.drawString(String.valueOf(playerTwoScore), 450, 100);
-		
-		//desenha a bola
-        g.fillRect(BallX, BallY, 15, 15);
-        
-        //parede_cima
-        g.fillRect(10, 0 , 650-20 , 6);
-        //parede_baixo
-        g.fillRect(10, 480-6, 650-20 , 6);
-        
-       
-        g.fillRect(30, player1y, 16, 77);//player1
-        
-        g.fillRect(590, player2y, 16, 77);//player2
-		}
-    
+
+        for (int lineY = 0; lineY < getHeight(); lineY += CENTER_LINE_STEP) {
+            graphics.drawLine(CENTER_LINE_X, lineY, CENTER_LINE_X, lineY + CENTER_LINE_LENGTH);
+        }
+
+        graphics.setFont(new Font(Font.DIALOG, Font.BOLD, SCORE_FONT_SIZE));
+        graphics.drawString(String.valueOf(playerOneScore), LEFT_SCORE_X, SCORE_Y);
+        graphics.drawString(String.valueOf(playerTwoScore), RIGHT_SCORE_X, SCORE_Y);
+
+        graphics.fillRect(ballX, ballY, BALL_SIZE, BALL_SIZE);
+        graphics.fillRect(WALL_X, 0, WALL_WIDTH, WALL_THICKNESS);
+        graphics.fillRect(WALL_X, BOARD_HEIGHT - WALL_THICKNESS, WALL_WIDTH, WALL_THICKNESS);
+
+        graphics.fillRect(LEFT_PADDLE_X, playerOneY, PADDLE_WIDTH, PADDLE_HEIGHT);
+        graphics.fillRect(RIGHT_PADDLE_X, playerTwoY, PADDLE_WIDTH, PADDLE_HEIGHT);
     }
 
-	
-	public void keyPressed(KeyEvent e){
-		if(e.getKeyCode() == KeyEvent.VK_UP && !showTitleScreen){
-			up=true;
-		}
-		
-		if(e.getKeyCode() == KeyEvent.VK_DOWN && !showTitleScreen){
-			down=true;
-		}
-		
-	}
-    public void keyReleased(KeyEvent e){ 
-		if(e.getKeyCode() == KeyEvent.VK_UP && !showTitleScreen){
-			System.out.println("Foi pression");
-			up=false;
-		}
+    @Override
+    public void keyPressed(KeyEvent event) {
+        if (showTitleScreen) {
+            return;
+        }
 
-		if(e.getKeyCode() == KeyEvent.VK_DOWN && !showTitleScreen){
-			System.out.println("Foi preeesi");
-			down=false;
-		}
-	}
-		
-    public void keyTyped(KeyEvent e){ }
-    
-   	
-	class FPS extends Thread{
-		public void run(){
-		    while(true){							
-				repaint();	
-		     try{
-		    	 sleep(1000/60);
-			     }catch(InterruptedException e){}
-			  }
-		}
-	}
-    
+        if (event.getKeyCode() == KeyEvent.VK_UP) {
+            moveUp = true;
+        }
+
+        if (event.getKeyCode() == KeyEvent.VK_DOWN) {
+            moveDown = true;
+        }
+    }
+
+    @Override
+    public void keyReleased(KeyEvent event) {
+        if (showTitleScreen) {
+            return;
+        }
+
+        if (event.getKeyCode() == KeyEvent.VK_UP) {
+            moveUp = false;
+        }
+
+        if (event.getKeyCode() == KeyEvent.VK_DOWN) {
+            moveDown = false;
+        }
+    }
+
+    @Override
+    public void keyTyped(KeyEvent event) {
+    }
+
+    class RepaintLoop extends Thread {
+        @Override
+        public void run() {
+            while (true) {
+                repaint();
+
+                try {
+                    sleep(FRAME_SLEEP_MILLIS);
+                } catch (InterruptedException e) {
+                }
+            }
+        }
+    }
 }
