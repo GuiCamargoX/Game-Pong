@@ -1,18 +1,20 @@
+package client;
+
 import javax.swing.JFrame;
-public class Main {
+
+public class ClientMain {
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("Pong");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        PongPanel gamePanel = new PongPanel();
+        GamePanel gamePanel = new GamePanel();
         frame.add(gamePanel);
         frame.addKeyListener(gamePanel);
 
-		frame.pack();
+        frame.pack();
         frame.setVisible(true);
 
-        new Cliente(gamePanel).start();
-      }
-
+        new GameClient(gamePanel).start();
+    }
 }

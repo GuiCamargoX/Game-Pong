@@ -1,8 +1,12 @@
-import java.io.*;
-import java.net.*;
-import java.util.*;
+package client;
 
-public class Cliente extends Thread {
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.Socket;
+import java.net.UnknownHostException;
+
+public class GameClient extends Thread {
   private static final String HOST = "localhost";
   private static final int DEFAULT_PORT = 5050;
   private static final String PORT_ENV = "PONG_PORT";
@@ -11,29 +15,28 @@ public class Cliente extends Thread {
   private static final char PLAYER_ONE_MARKER = '1';
   private static final char PLAYER_TWO_MARKER = '2';
 
-  static DataOutputStream outputStream = null;
-  static DataInputStream inputStream = null;
-  static boolean stopReaderThread = false;
+  private DataOutputStream outputStream;
+  private DataInputStream inputStream;
+  private boolean stopReaderThread = false;
 
-  int playerOneY = 0;
-  int playerTwoY = 0;
-  int ballX = 0;
-  int ballY = 0;
-  int playerOneScore = 0;
-  int playerTwoScore = 0;
+  private int playerOneY = 0;
+  private int playerTwoY = 0;
+  private int ballX = 0;
+  private int ballY = 0;
+  private int playerOneScore = 0;
+  private int playerTwoScore = 0;
 
-  int clientNumber;
-  boolean moveUp = false;
-  boolean moveDown = false;
-  boolean showTitleScreen = true;
+  private int clientNumber;
+  private boolean showTitleScreen = true;
 
-  Socket clientSocket = null;
-  PongPanel gamePanel = null;
+  private Socket clientSocket;
+  private final GamePanel gamePanel;
 
-  Cliente(PongPanel gamePanel) {
+  public GameClient(GamePanel gamePanel) {
     this.gamePanel = gamePanel;
   }
 
+  @Override
   public void run() {
     try {
       int port = resolvePort();
@@ -60,14 +63,13 @@ public class Cliente extends Thread {
       case 1:
         outputStream.writeChar(PLAYER_TWO_MARKER);
         break;
+      default:
+        break;
       }
 
       do {
-        moveUp = gamePanel.moveUp;
-        moveDown = gamePanel.moveDown;
-
-        outputStream.writeBoolean(moveUp);
-        outputStream.writeBoolean(moveDown);
+        outputStream.writeBoolean(gamePanel.moveUp);
+        outputStream.writeBoolean(gamePanel.moveDown);
         outputStream.flush();
 
         try {
@@ -100,10 +102,9 @@ public class Cliente extends Thread {
 
   class ServerReader extends Thread {
 
+    @Override
     public void run() {
-
       try {
-
         do {
           showTitleScreen = inputStream.readBoolean();
 
@@ -143,8 +144,6 @@ public class Cliente extends Thread {
       } catch (IOException e) {
         System.err.println("IOException:  " + e);
       }
-
     }
   }
-
 }

@@ -1,3 +1,5 @@
+package client;
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -6,7 +8,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import javax.swing.JPanel;
 
-public class PongPanel extends JPanel implements KeyListener {
+public class GamePanel extends JPanel implements KeyListener {
     static final int BOARD_WIDTH = 650;
     static final int BOARD_HEIGHT = 480;
 
@@ -50,7 +52,7 @@ public class PongPanel extends JPanel implements KeyListener {
         return new Dimension(BOARD_WIDTH, BOARD_HEIGHT);
     }
 
-    public PongPanel() {
+    public GamePanel() {
         setBackground(Color.BLACK);
         new RepaintLoop().start();
     }

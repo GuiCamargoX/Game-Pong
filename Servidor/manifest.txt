@@ -1,3 +1,0 @@
-Main-Class: Servidor
-Name: Servidor.class
-Java-Bean: True

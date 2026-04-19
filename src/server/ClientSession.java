@@ -1,59 +1,11 @@
+package server;
+
 import java.awt.Rectangle;
-import java.io.*;
-import java.net.*;
-import java.util.*;
-
-class Servidor {
-  static final int MAX_PLAYERS = 2;
-
-  private static final int DEFAULT_PORT = 5050;
-  private static final String PORT_ENV = "PONG_PORT";
-
-  public static void main(String[] args) {
-    ServerSocket serverSocket = null;
-    int port = resolvePort();
-
-    try {
-      serverSocket = new ServerSocket(port);
-    } catch (IOException e) {
-      System.out.println("Could not listen on port: " + port + ", " + e);
-      System.exit(1);
-    }
-
-    for (int i = 0; i < MAX_PLAYERS; i++) {
-      Socket clientSocket = null;
-      try {
-        clientSocket = serverSocket.accept();
-      } catch (IOException e) {
-        System.out.println("Accept failed: " + port + ", " + e);
-        System.exit(1);
-      }
-
-      System.out.println("Client connected");
-      new ClientSession(clientSocket).start();
-    }
-
-    try {
-      serverSocket.close();
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-  }
-
-  private static int resolvePort() {
-    String envPort = System.getenv(PORT_ENV);
-    if (envPort == null || envPort.trim().isEmpty()) {
-      return DEFAULT_PORT;
-    }
-
-    try {
-      return Integer.parseInt(envPort.trim());
-    } catch (NumberFormatException e) {
-      System.err.println("Invalid " + PORT_ENV + " value: " + envPort + ". Using " + DEFAULT_PORT + ".");
-      return DEFAULT_PORT;
-    }
-  }
-}
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.Socket;
+import java.util.NoSuchElementException;
 
 class ClientSession extends Thread {
   private static final int BOARD_WIDTH = 650;
@@ -80,41 +32,41 @@ class ClientSession extends Thread {
   private static final char PLAYER_TWO_MARKER = '2';
 
   private final Socket clientSocket;
-  static DataOutputStream[] clientOutputs = new DataOutputStream[Servidor.MAX_PLAYERS];
-  static int connectedClients = 0;
-  public boolean moveUp;
-  public boolean moveDown;
 
-  static int ballX = BALL_RESET_X;
-  static int mirroredBallX = BALL_RESET_X;
-  static int ballY = BALL_RESET_Y;
-  static int playerOneY = INITIAL_PADDLE_Y;
-  static int playerTwoY = INITIAL_PADDLE_Y;
-  static int ballStepX = INITIAL_BALL_SPEED;
-  static int ballStepY = INITIAL_BALL_SPEED;
-  static int playerOneScore = 0;
-  static int playerTwoScore = 0;
-  static boolean showTitleScreen = true;
+  private static DataOutputStream[] clientOutputs = new DataOutputStream[ServerMain.MAX_PLAYERS];
+  private static int connectedClients = 0;
 
-  Rectangle topWall = new Rectangle(WALL_X, TOP_WALL_Y, WALL_WIDTH, WALL_THICKNESS);
-  Rectangle bottomWall = new Rectangle(WALL_X, BOTTOM_WALL_Y, WALL_WIDTH, WALL_THICKNESS);
+  private static int ballX = BALL_RESET_X;
+  private static int mirroredBallX = BALL_RESET_X;
+  private static int ballY = BALL_RESET_Y;
+  private static int playerOneY = INITIAL_PADDLE_Y;
+  private static int playerTwoY = INITIAL_PADDLE_Y;
+  private static int ballStepX = INITIAL_BALL_SPEED;
+  private static int ballStepY = INITIAL_BALL_SPEED;
+  private static int playerOneScore = 0;
+  private static int playerTwoScore = 0;
+  private static boolean showTitleScreen = true;
 
-  Rectangle playerOnePaddle = new Rectangle(LEFT_PADDLE_X, playerOneY, PADDLE_COLLISION_WIDTH, PADDLE_HEIGHT);
-  Rectangle playerTwoPaddle = new Rectangle(RIGHT_PADDLE_X, playerTwoY, PADDLE_COLLISION_WIDTH, PADDLE_HEIGHT);
-  Rectangle ballRect = new Rectangle(ballX, ballY, BALL_SIZE, BALL_SIZE);
+  private Rectangle topWall = new Rectangle(WALL_X, TOP_WALL_Y, WALL_WIDTH, WALL_THICKNESS);
+  private Rectangle bottomWall = new Rectangle(WALL_X, BOTTOM_WALL_Y, WALL_WIDTH, WALL_THICKNESS);
+
+  private Rectangle playerOnePaddle = new Rectangle(LEFT_PADDLE_X, playerOneY, PADDLE_COLLISION_WIDTH, PADDLE_HEIGHT);
+  private Rectangle playerTwoPaddle = new Rectangle(RIGHT_PADDLE_X, playerTwoY, PADDLE_COLLISION_WIDTH, PADDLE_HEIGHT);
+  private Rectangle ballRect = new Rectangle(ballX, ballY, BALL_SIZE, BALL_SIZE);
 
   ClientSession(Socket clientSocket) {
     this.clientSocket = clientSocket;
   }
 
+  @Override
   public void run() {
     try {
       DataInputStream inputStream = new DataInputStream(clientSocket.getInputStream());
-      clientOutputs[connectedClients++] = new DataOutputStream(clientSocket.getOutputStream());
+      int clientNumber = registerClientOutput(new DataOutputStream(clientSocket.getOutputStream()));
 
-      new StateWriter().start();
+      new StateWriter(clientNumber).start();
 
-      if (connectedClients == Servidor.MAX_PLAYERS) {
+      if (connectedClients == ServerMain.MAX_PLAYERS) {
         showTitleScreen = false;
         new BallLoop().start();
       }
@@ -122,8 +74,8 @@ class ClientSession extends Thread {
       char playerMarker = inputStream.readChar();
 
       do {
-        moveUp = inputStream.readBoolean();
-        moveDown = inputStream.readBoolean();
+        boolean moveUp = inputStream.readBoolean();
+        boolean moveDown = inputStream.readBoolean();
 
         if (moveUp && !playerOnePaddle.intersects(topWall) && playerMarker == PLAYER_ONE_MARKER) {
           playerOneY -= PADDLE_MOVE_STEP;
@@ -153,9 +105,17 @@ class ClientSession extends Thread {
     }
   }
 
+  private static synchronized int registerClientOutput(DataOutputStream outputStream) {
+    int clientNumber = connectedClients;
+    clientOutputs[clientNumber] = outputStream;
+    connectedClients++;
+    return clientNumber;
+  }
+
   class BallLoop extends Thread {
     private boolean canBounceFromPlayerOne = true;
 
+    @Override
     public void run() {
       do {
         ballRect.setLocation(ballX, ballY);
@@ -202,11 +162,14 @@ class ClientSession extends Thread {
   }
 
   class StateWriter extends Thread {
-    int clientNumber;
+    private final int clientNumber;
 
+    StateWriter(int clientNumber) {
+      this.clientNumber = clientNumber;
+    }
+
+    @Override
     public void run() {
-      clientNumber = connectedClients - 1;
-
       try {
         clientOutputs[clientNumber].writeInt(clientNumber);
 
