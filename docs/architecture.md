@@ -1,6 +1,8 @@
-# Architecture Overview
+# Architecture Overview 🏗️
 
 This project uses a simple server-authoritative architecture.
+
+If you are new to this style, read this file top to bottom once, then open the matching classes while reading each step.
 
 ## Runtime flow
 
@@ -12,7 +14,9 @@ This project uses a simple server-authoritative architecture.
 6. The server updates game state and broadcasts the full state to both clients.
 7. Each client renders the received state in `client.GamePanel`.
 
-## Responsibility split
+Tip: when debugging, check each step in this order. Most bugs become easier once you know exactly where the flow breaks 🔍.
+
+## Responsibility split 🤝
 
 - **Server authority**
   - Owns score, ball physics, and paddle positions.
@@ -24,7 +28,7 @@ This project uses a simple server-authoritative architecture.
   - Sends input booleans to server.
   - Draws game state received from server.
 
-## Shared constants
+## Shared constants 📦
 
 `shared.PongConstants` is the source of truth for values that must stay aligned:
 
@@ -32,4 +36,6 @@ This project uses a simple server-authoritative architecture.
 - protocol markers (`PLAYER_ONE_MARKER`, `PLAYER_TWO_MARKER`)
 - board and physics dimensions (`BOARD_WIDTH`, `PADDLE_HEIGHT`, `BALL_SIZE`, etc.)
 
-Keeping those values centralized reduces accidental client/server mismatch.
+Keeping those values centralized reduces accidental client/server mismatch ✅.
+
+When you are refactoring, prefer changing constants first before touching loop logic. It is safer and easier to verify.
