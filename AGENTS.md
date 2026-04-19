@@ -9,19 +9,19 @@
 ## Project shape
 - Plain Java project (no Maven/Gradle); use `javac`/`java` directly.
 - Client entrypoint: `Main.java` (`Main` creates `PongPanel` and starts `Cliente`).
-- Server entrypoint: `Servidor/Servidor.java` (`Servidor`), with a prebuilt `Servidor/Servidor.jar`.
+- Server entrypoint: `Servidor/Servidor.java` (`Servidor`).
 - Classes are in the default package (no `package` declarations).
 
 ## Run commands (from repo root)
 - Compile server: `javac Servidor/Servidor.java`
 - Compile client: `javac Main.java Cliente.java PongPanel.java`
-- Run server: `java -cp Servidor Servidor` (or `java -jar Servidor/Servidor.jar`)
+- Run server: `java -cp Servidor Servidor`
 - Run clients: start `java Main` in two separate terminals.
 - Required order: start server first, then both clients.
 
 ## Critical coupling (easy to break)
-- Port is hardcoded to `80` in both `Cliente.java` and `Servidor/Servidor.java`; change both files together.
-- Port `80` may require elevated privileges on Linux/macOS; if refactoring for easier local use, switch both sides to an unprivileged port.
+- Default port is `5050` in both `Cliente.java` and `Servidor/Servidor.java`.
+- `PONG_PORT` environment variable overrides the default on both sides; use the same value for server and clients.
 - Wire protocol is positional `DataInputStream/DataOutputStream`; keep read/write order exactly aligned between server and client.
 - Match stays in waiting screen until 2 clients connect.
 
@@ -33,6 +33,5 @@
   - ball and score remain synchronized from both client views
 
 ## Repo gotchas
-- `.gitignore` excludes `*.class` and `*.jar`, but `Servidor/*.class` and `Servidor/Servidor.jar` are currently tracked.
-- Recompiling server can modify tracked binaries.
+- `.gitignore` excludes `*.class` and `*.jar`; do not commit compiled artifacts.
 - Server code is effectively 2-player only (`DataOutputStream[2]`), so do not assume extra clients are supported.
