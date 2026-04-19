@@ -30,6 +30,15 @@ java Main
 
 The match leaves the waiting screen only after both clients are connected.
 
+Default port is `5050`.
+
+To use a custom port, set `PONG_PORT` for both server and clients:
+
+```bash
+PONG_PORT=6000 java -cp Servidor Servidor
+PONG_PORT=6000 java Main
+```
+
 ## Project layout
 
 - `Main.java`: client entrypoint, creates UI and starts `Cliente`
@@ -39,7 +48,7 @@ The match leaves the waiting screen only after both clients are connected.
 
 ## Troubleshooting
 
-- `Could not listen on port: 80`: port 80 may require elevated privileges on Linux/macOS.
+- `Could not listen on port: 5050`: the port is busy; choose another one with `PONG_PORT` for both server and clients.
 - Waiting screen never leaves: verify server is running and two clients are connected.
 - One side is desynced: keep client/server protocol read/write order aligned when refactoring.
 

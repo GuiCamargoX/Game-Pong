@@ -3,6 +3,9 @@ import java.net.*;
 import java.util.*;
 
 public class Cliente extends Thread{
+  private static final int DEFAULT_PORT = 5050;
+  private static final String PORT_ENV = "PONG_PORT";
+
   static DataOutputStream os = null;
   static DataInputStream is = null;
   static boolean paraThread = false;
@@ -23,7 +26,8 @@ public class Cliente extends Thread{
 	
 public void run(){
      try {
-      socket = new Socket("localhost",80);
+      int port = resolvePort();
+      socket = new Socket("localhost", port);
       os = new DataOutputStream(socket.getOutputStream());
       is = new DataInputStream(socket.getInputStream());	
       
@@ -68,6 +72,20 @@ public void run(){
       System.err.println("Trying to connect to unknown host: " + e);
     } catch (IOException e) {
       System.err.println("IOException:  " + e);
+    }
+  }
+
+  private int resolvePort() {
+    String envPort = System.getenv(PORT_ENV);
+    if (envPort == null || envPort.trim().isEmpty()) {
+      return DEFAULT_PORT;
+    }
+
+    try {
+      return Integer.parseInt(envPort.trim());
+    } catch (NumberFormatException e) {
+      System.err.println("Invalid " + PORT_ENV + " value: " + envPort + ". Using " + DEFAULT_PORT + ".");
+      return DEFAULT_PORT;
     }
   }
 	

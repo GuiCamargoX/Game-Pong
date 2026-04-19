@@ -4,13 +4,17 @@ import java.util.*;
 import java.awt.Rectangle;
 
 class Servidor {
+  private static final int DEFAULT_PORT = 5050;
+  private static final String PORT_ENV = "PONG_PORT";
+
   public static void main(String[] args) {
     ServerSocket serverSocket=null;
+    int port = resolvePort();
 
     try {
-      serverSocket = new ServerSocket(80);
+      serverSocket = new ServerSocket(port);
     } catch (IOException e) {
-      System.out.println("Could not listen on port: " + 80 + ", " + e);
+      System.out.println("Could not listen on port: " + port + ", " + e);
       System.exit(1);
     }
 
@@ -19,7 +23,7 @@ class Servidor {
       try {
         clientSocket = serverSocket.accept();
       } catch (IOException e) {
-        System.out.println("Accept failed: " + 80 + ", " + e);
+        System.out.println("Accept failed: " + port + ", " + e);
         System.exit(1);
       }
 
@@ -34,6 +38,20 @@ class Servidor {
       serverSocket.close();
     } catch (IOException e) {
       e.printStackTrace();
+    }
+  }
+
+  private static int resolvePort() {
+    String envPort = System.getenv(PORT_ENV);
+    if (envPort == null || envPort.trim().isEmpty()) {
+      return DEFAULT_PORT;
+    }
+
+    try {
+      return Integer.parseInt(envPort.trim());
+    } catch (NumberFormatException e) {
+      System.err.println("Invalid " + PORT_ENV + " value: " + envPort + ". Using " + DEFAULT_PORT + ".");
+      return DEFAULT_PORT;
     }
   }
 }
