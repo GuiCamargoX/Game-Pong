@@ -7,23 +7,26 @@
 - Prefer refactors that improve readability, naming, structure, and onboarding docs while preserving behavior.
 
 ## Project shape
-- Plain Java project (no Maven/Gradle); use `javac`/`java` directly.
-- Client entrypoint: `Main.java` (`Main` creates `PongPanel` and starts `Cliente`).
-- Server entrypoint: `Servidor/Servidor.java` (`Servidor`).
-- Classes are in the default package (no `package` declarations).
+- Plain Java project (no Maven/Gradle); compile with `javac` and run with `java`.
+- Source layout is package-based under `src/`:
+  - `client` package: UI, input, and client socket thread.
+  - `server` package: server bootstrap and client sessions.
+  - `shared` package: constants that must stay aligned across client/server.
+- Client entrypoint: `src/client/ClientMain.java` (`client.ClientMain`).
+- Server entrypoint: `src/server/ServerMain.java` (`server.ServerMain`).
 
 ## Run commands (from repo root)
-- Compile server: `javac Servidor/Servidor.java`
-- Compile client: `javac Main.java Cliente.java PongPanel.java`
-- Run server: `java -cp Servidor Servidor`
-- Run clients: start `java Main` in two separate terminals.
+- Compile all sources: `javac -d out src/shared/PongConstants.java src/server/*.java src/client/*.java`
+- Run server: `java -cp out server.ServerMain`
+- Run clients: start `java -cp out client.ClientMain` in two separate terminals.
 - Required order: start server first, then both clients.
 
 ## Critical coupling (easy to break)
-- Default port is `5050` in both `Cliente.java` and `Servidor/Servidor.java`.
+- Default port is `5050` via `shared.PongConstants.DEFAULT_PORT`.
 - `PONG_PORT` environment variable overrides the default on both sides; use the same value for server and clients.
-- Wire protocol is positional `DataInputStream/DataOutputStream`; keep read/write order exactly aligned between server and client.
+- Wire protocol is positional `DataInputStream/DataOutputStream`; keep read/write order exactly aligned between server and client (`docs/protocol.md`).
 - Match stays in waiting screen until 2 clients connect.
+- Client 2 uses mirrored ball X; preserve this behavior unless intentionally changing gameplay.
 
 ## Verification
 - No automated tests/lint/typecheck are configured.
@@ -34,4 +37,5 @@
 
 ## Repo gotchas
 - `.gitignore` excludes `*.class` and `*.jar`; do not commit compiled artifacts.
-- Server code is effectively 2-player only (`DataOutputStream[2]`), so do not assume extra clients are supported.
+- Build output should go to `out/`.
+- Server code is effectively 2-player only (`MAX_PLAYERS = 2`), so do not assume extra clients are supported.
