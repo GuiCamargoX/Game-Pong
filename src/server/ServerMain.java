@@ -1,15 +1,14 @@
 package server;
 
+import static shared.PongConstants.DEFAULT_PORT;
+import static shared.PongConstants.MAX_PLAYERS;
+import static shared.PongConstants.PORT_ENV;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
 public class ServerMain {
-  static final int MAX_PLAYERS = 2;
-
-  private static final int DEFAULT_PORT = 5050;
-  private static final String PORT_ENV = "PONG_PORT";
-
   public static void main(String[] args) {
     ServerSocket serverSocket = null;
     int port = resolvePort();

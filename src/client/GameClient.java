@@ -1,5 +1,12 @@
 package client;
 
+import static shared.PongConstants.DEFAULT_PORT;
+import static shared.PongConstants.HOST;
+import static shared.PongConstants.NETWORK_TICK_SLEEP_MILLIS;
+import static shared.PongConstants.PLAYER_ONE_MARKER;
+import static shared.PongConstants.PLAYER_TWO_MARKER;
+import static shared.PongConstants.PORT_ENV;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -7,14 +14,6 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 
 public class GameClient extends Thread {
-  private static final String HOST = "localhost";
-  private static final int DEFAULT_PORT = 5050;
-  private static final String PORT_ENV = "PONG_PORT";
-  private static final int NETWORK_TICK_RATE = 60;
-  private static final long NETWORK_TICK_SLEEP_MILLIS = 1000L / NETWORK_TICK_RATE;
-  private static final char PLAYER_ONE_MARKER = '1';
-  private static final char PLAYER_TWO_MARKER = '2';
-
   private DataOutputStream outputStream;
   private DataInputStream inputStream;
   private boolean stopReaderThread = false;

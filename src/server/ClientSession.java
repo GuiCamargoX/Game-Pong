@@ -1,5 +1,7 @@
 package server;
 
+import static shared.PongConstants.*;
+
 import java.awt.Rectangle;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -8,32 +10,9 @@ import java.net.Socket;
 import java.util.NoSuchElementException;
 
 class ClientSession extends Thread {
-  private static final int BOARD_WIDTH = 650;
-  private static final int BOARD_HEIGHT = 480;
-  private static final int WALL_X = 10;
-  private static final int WALL_WIDTH = BOARD_WIDTH - 20;
-  private static final int WALL_THICKNESS = 6;
-  private static final int TOP_WALL_Y = 0;
-  private static final int BOTTOM_WALL_Y = BOARD_HEIGHT - WALL_THICKNESS;
-  private static final int LEFT_PADDLE_X = 30;
-  private static final int RIGHT_PADDLE_X = 590;
-  private static final int PADDLE_COLLISION_WIDTH = 17;
-  private static final int PADDLE_HEIGHT = 77;
-  private static final int BALL_SIZE = 15;
-  private static final int PADDLE_MOVE_STEP = 10;
-  private static final int INITIAL_PADDLE_Y = 250;
-  private static final int INITIAL_BALL_SPEED = 5;
-  private static final int LOOP_RATE = 60;
-  private static final long LOOP_SLEEP_MILLIS = 1000L / LOOP_RATE;
-  private static final int BALL_RESET_X = BOARD_WIDTH / 2;
-  private static final int BALL_RESET_Y = BOARD_HEIGHT / 2;
-  private static final int OPPONENT_VIEW_BALL_RESET_X = 600 / 2;
-  private static final char PLAYER_ONE_MARKER = '1';
-  private static final char PLAYER_TWO_MARKER = '2';
-
   private final Socket clientSocket;
 
-  private static DataOutputStream[] clientOutputs = new DataOutputStream[ServerMain.MAX_PLAYERS];
+  private static DataOutputStream[] clientOutputs = new DataOutputStream[MAX_PLAYERS];
   private static int connectedClients = 0;
 
   private static int ballX = BALL_RESET_X;
@@ -66,7 +45,7 @@ class ClientSession extends Thread {
 
       new StateWriter(clientNumber).start();
 
-      if (connectedClients == ServerMain.MAX_PLAYERS) {
+      if (connectedClients == MAX_PLAYERS) {
         showTitleScreen = false;
         new BallLoop().start();
       }
@@ -153,7 +132,7 @@ class ClientSession extends Thread {
         ballY -= ballStepY;
 
         try {
-          sleep(LOOP_SLEEP_MILLIS);
+          sleep(NETWORK_TICK_SLEEP_MILLIS);
         } catch (InterruptedException e) {
         }
 
@@ -202,7 +181,7 @@ class ClientSession extends Thread {
         }
 
         try {
-          sleep(LOOP_SLEEP_MILLIS);
+          sleep(NETWORK_TICK_SLEEP_MILLIS);
         } catch (InterruptedException e) {
         }
 

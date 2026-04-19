@@ -1,5 +1,23 @@
 package client;
 
+import static shared.PongConstants.BALL_RESET_X;
+import static shared.PongConstants.BALL_RESET_Y;
+import static shared.PongConstants.BALL_SIZE;
+import static shared.PongConstants.BOARD_HEIGHT;
+import static shared.PongConstants.BOARD_WIDTH;
+import static shared.PongConstants.CENTER_LINE_LENGTH;
+import static shared.PongConstants.CENTER_LINE_STEP;
+import static shared.PongConstants.CENTER_LINE_X;
+import static shared.PongConstants.INITIAL_PADDLE_Y;
+import static shared.PongConstants.LEFT_PADDLE_X;
+import static shared.PongConstants.NETWORK_TICK_SLEEP_MILLIS;
+import static shared.PongConstants.PADDLE_HEIGHT;
+import static shared.PongConstants.PADDLE_WIDTH;
+import static shared.PongConstants.RIGHT_PADDLE_X;
+import static shared.PongConstants.WALL_THICKNESS;
+import static shared.PongConstants.WALL_WIDTH;
+import static shared.PongConstants.WALL_X;
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -9,14 +27,6 @@ import java.awt.event.KeyListener;
 import javax.swing.JPanel;
 
 public class GamePanel extends JPanel implements KeyListener {
-    static final int BOARD_WIDTH = 650;
-    static final int BOARD_HEIGHT = 480;
-
-    private static final int FRAME_RATE = 60;
-    private static final long FRAME_SLEEP_MILLIS = 1000L / FRAME_RATE;
-    private static final int CENTER_LINE_X = BOARD_WIDTH / 2;
-    private static final int CENTER_LINE_STEP = 50;
-    private static final int CENTER_LINE_LENGTH = 25;
     private static final int SCORE_FONT_SIZE = 36;
     private static final int TITLE_FONT_SIZE = 70;
     private static final int WAITING_FONT_SIZE = 28;
@@ -27,20 +37,11 @@ public class GamePanel extends JPanel implements KeyListener {
     private static final int LEFT_SCORE_X = 150;
     private static final int RIGHT_SCORE_X = 450;
     private static final int SCORE_Y = 100;
-    private static final int BALL_SIZE = 15;
-    private static final int WALL_X = 10;
-    private static final int WALL_THICKNESS = 6;
-    private static final int WALL_WIDTH = BOARD_WIDTH - 20;
-    private static final int LEFT_PADDLE_X = 30;
-    private static final int RIGHT_PADDLE_X = 590;
-    private static final int PADDLE_WIDTH = 16;
-    private static final int PADDLE_HEIGHT = 77;
-
     boolean showTitleScreen = true;
-    int ballX = BOARD_WIDTH / 2;
-    int ballY = BOARD_HEIGHT / 2;
-    int playerOneY = 250;
-    int playerTwoY = 250;
+    int ballX = BALL_RESET_X;
+    int ballY = BALL_RESET_Y;
+    int playerOneY = INITIAL_PADDLE_Y;
+    int playerTwoY = INITIAL_PADDLE_Y;
     int playerOneScore = 0;
     int playerTwoScore = 0;
 
@@ -128,7 +129,7 @@ public class GamePanel extends JPanel implements KeyListener {
                 repaint();
 
                 try {
-                    sleep(FRAME_SLEEP_MILLIS);
+                    sleep(NETWORK_TICK_SLEEP_MILLIS);
                 } catch (InterruptedException e) {
                 }
             }
