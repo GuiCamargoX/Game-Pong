@@ -1,16 +1,32 @@
 # Pong Java Socket Tutorial 🏓
 
-This repository is a learning project for Java sockets and basic client/server game architecture.
+Welcome! This repository is a beginner-friendly Java socket project.
 
-The goal is educational: understand how a server accepts multiple clients, sends synchronized state, and reads live input over TCP.
+You will learn how a server accepts clients, how sockets exchange data, and how a server-authoritative game stays synchronized between players.
 
-If you are learning sockets for the first time, you are in the right place 👋. Keep changes small, run often, and use this project as a playground.
+## What you will learn 🎯
 
-## Learning goals 🎯
+- How to create a TCP server in Java with `ServerSocket`.
+- How clients connect with `Socket` and exchange binary messages.
+- How to structure a simple multiplayer game with client and server responsibilities.
 
-- Start a Java TCP server and connect two clients.
-- Understand a simple positional wire protocol using `DataInputStream` and `DataOutputStream`.
-- See how a server-authoritative game loop keeps both clients synchronized.
+## Server concepts before coding 🧠
+
+In simple terms, a server is a program that listens for connections and responds to clients.
+
+Common server models:
+
+- **Iterative server**: handles one client at a time (simple, but limited).
+- **Thread-per-client**: each client gets its own thread (easy to understand, great for tutorials).
+- **Thread pool**: reuses worker threads to scale better.
+- **Event-driven (non-blocking)**: advanced model for high concurrency.
+
+This project implements **thread-per-client** plus a **server-authoritative game loop**.
+
+- The server is the referee: it owns score, ball, and paddle positions.
+- Clients send input and render what the server says is true.
+
+If you want a deeper conceptual explanation with code examples, see `docs/server-concepts.md`.
 
 ## Prerequisites
 
@@ -41,7 +57,26 @@ The game stays on the waiting screen until both clients connect.
 
 Nice, you are running a full Java client/server game 🎉.
 
-## Port configuration
+## How socket connection works in this project 🔌
+
+1. `server.ServerMain` opens a listening socket.
+2. Each `client.ClientMain` starts `client.GameClient` and connects.
+3. Server assigns a `clientNumber` (`0` or `1`).
+4. Client sends a player marker (`'1'` or `'2'`).
+5. Client repeatedly sends input booleans (`moveUp`, `moveDown`).
+6. Server updates game state and repeatedly broadcasts full state to both clients.
+
+Mini timeline example:
+
+```text
+Server: listen(5050)
+Client A: connect -> receives clientNumber=0 -> sends '1'
+Client B: connect -> receives clientNumber=1 -> sends '2'
+Loop: clients send input booleans
+Loop: server sends scores + paddles + ball position
+```
+
+## Port configuration ⚙️
 
 - Default port is `5050`.
 - Set `PONG_PORT` on server and clients when you want a custom port.
@@ -51,7 +86,7 @@ PONG_PORT=6000 java -cp out server.ServerMain
 PONG_PORT=6000 java -cp out client.ClientMain
 ```
 
-## Package layout
+## Package layout 🗂️
 
 - `src/client/ClientMain.java`: client entrypoint (UI + client thread bootstrap)
 - `src/client/GameClient.java`: socket I/O (send inputs, receive state)
@@ -60,10 +95,11 @@ PONG_PORT=6000 java -cp out client.ClientMain
 - `src/server/ClientSession.java`: per-client session + state broadcast loop
 - `src/shared/PongConstants.java`: shared network and game constants
 
-## Protocol and architecture docs
+## Learning docs 📚
 
-- `docs/protocol.md`: exact field order for client/server stream messages
-- `docs/architecture.md`: execution flow and responsibilities
+- `docs/server-concepts.md`: server models, socket fundamentals, TCP vs UDP, examples
+- `docs/architecture.md`: execution flow and responsibility split
+- `docs/protocol.md`: exact stream field order and safe protocol changes
 
 ## Refactor roadmap (for beginners) 🧭
 
